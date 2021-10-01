@@ -1,0 +1,188 @@
+<html>
+    <!-- HEADER -->
+    <head>
+        <script type="text/javascript" src="js/jquery-3.6.0.min.js"></script>
+
+        <title>Demo page of "Diffusion-Based Voice Conversion With Fast Maximum Likelihood Sampling Scheme" (ICLR 2022 review)</title>
+        <link rel="icon" href="resources/img/icon.png">
+
+        <link rel="stylesheet" href="css/main.css">
+        <link rel="stylesheet" href="css/text.css">
+        <link rel="stylesheet" href="css/media.css">
+        <link rel="stylesheet" href="css/select.css">
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,200;0,300;0,400;0,500;1,100&display=swap" rel="stylesheet">
+    </head>
+
+    <!-- MAIN BODY -->
+    <body>
+        <div class="main">
+            <!-- HEADER -->
+            <br>
+            <h1 class="wrapper">Diffusion-Based Voice Conversion With Fast Maximum Likelihood Sampling Scheme</h1>
+            <p class="wrapper">Under review as a conference paper at ICLR 2022, <a href="">pdf</a> (code will be made publicly available shortly)</p>
+
+            <!-- ABSTRACT -->
+            <br><br>
+            <h2 class="wrapper">Abstract</h2>
+            <p class="wrapper">Voice conversion is a common speech synthesis task which can be solved in different ways depending on a particular real-world scenario. The most challenging one often referred to as one-shot many-to-many voice conversion consists in copying target voice from only one reference utterance in the most general case when both source and target speakers do not belong to the training dataset. We present a scalable high-quality solution based on diffusion probabilistic modeling and demonstrate its superior quality compared to state-of-the-art one-shot voice conversion approaches. Moreover, focusing on real-time applications, we investigate general principles which can make diffusion models faster while keeping synthesis quality at a high level. As a result, we develop a novel Stochastic Differential Equations solver suitable for various diffusion model types and generative tasks as shown through empirical studies and justify it by theoretical analysis.</p>
+
+            <!-- 1 NEW SAMPLER -->
+            <br><br>
+            <h2 class="wrapper">1 New Maximum Likelihood SDE Solver</h2>
+            <table class="wrapper">
+                <tbody style="margin-left: auto; margin-right: auto; text-align: center;">
+                    <tr>
+                        <td>Euler-Maruyama</td>
+                        <td>Probability Flow</td>
+                        <td>Maximum Likelihood (τ = 0.5)</td>
+                        <td>Maximum Likelihood (τ = 1.0)</td>
+                    </tr>
+                    <tr>
+                        <td><img src="resources/img/em.png" style="width: 95%; height: auto; padding: 0px;"/></td>
+                        <td><img src="resources/img/pf.png" style="width: 95%; height: auto; padding: 0px;"/></td>
+                        <td><img src="resources/img/mlh.png" style="width: 95%; height: auto; padding: 0px;"/></td>
+                        <td><img src="resources/img/mlf.png" style="width: 95%; height: auto; padding: 0px;"/></td>
+                    </tr>
+                </tbody>
+            </table>
+            <p class="wrapper" style="max-width: 500px; text-align: center; font-size: smaller; padding-top: 5px;">Figure 1. CIFAR10 images randomly sampled from the same DPM using only 10 iterations of reverse diffusion with different solvers. For Maximum Likelihood Sampling τ denotes the step when our new scheme was turned on (standard Euler-Maruyama solver is used when t > τ).</p>
+            <p class="wrapper">Standard Euler-Maruyama method usually used to solve reverse diffusion SDE in DPMs introduces large discretization error when the number of iterations is extremely small and, generally speaking, is biased. As a consequence DPM output distribution is not the same as data distribution even when score function is trained till optimality. Instead, we propose to use <b>a novel solver</b> that is optimal in terms of likelihood of forward diffusion trajectories. Figure 1 shows that it significantly outperforms standard DPM sampling techniques when the number of solver steps is small.</p>
+            <p class="wrapper">Our Fast Maximum Likelihood Solver <b>does not require</b>:</p>
+            <div class="wrapper" style="padding-left: 50px;">
+                <ul class="wrapper" style="list-style-position: inside; padding-top: 0px;">
+                    <li>Additional computational costs</li>
+                    <li>Exhaustive noise schedule search for small number of iterations</li>
+                    <li>Re-training of the DPM</li>
+                </ul>
+            </div>
+            <p class="wrapper">Check out a quick <a href="">guide</a> (Google Colab, in progress) on CIFAR10 how to add our solver to your DPM.</p>
+
+            <!-- 2 MOS AUDIO SAMPLES -->
+            <br><br>
+            <h2 class="wrapper">2 One-shot Many-to-Many (Any-to-Any) Voice Conversion</h2>
+            <p class="wrapper">In this section we provide a subset of audio samples used in Mean Opinion Score evaluation. We compare baselines with our diffusion-based models trained on VCTK and LibriTTS datasets (named as <i style="font-weight: 700;">Diff-VCTK</i> and <i style="font-weight: 700;">Diff-LibriTTS</i> respectively) as well as show the quality achieved using different sampling schemes (denoted as <i style="font-weight: 700;">solver-N</i>, where <i style="font-weight: 700;">N</i> is the number of iterations, <i style="font-weight: 700;">EM</i> is used for Euler-Maruyama solver, <i style="font-weight: 700;">PF</i> for Probability Flow, <i style="font-weight: 700;">ML</i> for our Maximum Likelihood solver).</p>
+            <div class="wrapper" style="text-align: center;">
+                <span class="choose">Choose a pair of voices:</span>
+                
+                    <div class="dropdown">
+                    <div class="select">
+                        <span>Select pair</span>
+                        <i class="fa fa-chevron-left"></i>
+                    </div>
+                    <input type="hidden" name="gender">
+                    <ul class="dropdown-menu">
+                        <li id="587-5126">587-5126</li>
+                        <li id="1401-8057">1401-8057</li>
+                        <li id="1401-john">1401-john</li>
+                        <li id="2238-3723">2238-3723</li>
+                        <li id="4014-587">4014-587</li>
+                        <li id="6415-paul">6415-paul</li>
+                        <li id="8057-6415">8057-6415</li>
+                        <li id="john-larry">john-larry</li>
+                        <li id="p238-p261">p238-p261</li>
+                        <li id="p241-p238">p241-p238</li>
+                        <li id="p252-p243">p252-p243</li>
+                        <li id="paul-donald">paul-donald</li>
+                    </ul>
+                    </div>
+            </div>
+            <script language="JavaScript" type="text/javascript" src="js/select.js"></script>
+
+            <div class="vcpair">
+                <table class="wrapper">
+                    <tbody style="margin-right: auto; text-align: center;">
+                        <tr>
+                            <td></td>
+                            <td><b>Source</b></td>
+                            <td><b>Target</b></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><audio controls=""><source src=""></audio></td>
+                            <td><audio controls=""><source src=""></audio></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><br></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><a href="https://github.com/KimythAnly/AGAIN-VC">AGAIN-VC</a></td>
+                            <td><a href="https://github.com/yistLin/FragmentVC">FragmentVC</a></td>
+                            <td><a href="https://github.com/Wendison/VQMIVC">VQMIVC</a></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: medium; text-align: right;"><i style="font-weight: 700;">Baselines</i>:</td>
+                            <td><audio controls=""><source src=""></audio></td>
+                            <td><audio controls=""><source src=""></audio></td>
+                            <td><audio controls=""><source src=""></audio></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><a href="https://github.com/liusongxiang/ppg-vc">BNE-PPG-VC</a></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td><audio controls=""><source src=""></audio></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><br></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>ML-6</td>
+                            <td>ML-30</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: medium; text-align: right;"><i style="font-weight: 700;">Diff-VCTK</i>:</td>
+                            <td><audio controls=""><source src=""></audio></td>
+                            <td><audio controls=""><source src=""></audio></td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td><br></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>EM-6</td>
+                            <td>PF-6</td>
+                            <td>ML-6</td>
+                        </tr>
+                        <tr>
+                            <td style="font-size: medium; text-align: right;"><i style="font-weight: 700;">Diff-LibriTTS</i>:</td>
+                            <td><audio controls=""><source src=""></audio></td>
+                            <td><audio controls=""><source src=""></audio></td>
+                            <td><audio controls=""><source src=""></audio></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td>ML-30</td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td><audio controls=""><source src=""></audio></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <br><br><br>
+            <p class="wrapper" style="text-align: center; font-weight: 300;">September 2021</p>
+            <br><br><br>
+        </div>
+        
+    </body>
+</html>
